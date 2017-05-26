@@ -6,7 +6,92 @@
     <script src="../libs/gl-matrix/gl-matrix.js"></script>
     <script src="../libs/requestAnimationFrame/RequestAnimationFrame.js"></script>
     <script type="text/javascript">
+        var fragmentShaderSource =
+            "void main(void) {\n" +
+            "}\n";
 
+        var vertexShaderSource =
+            "void main(void) {\n" +
+            "}\n";
+
+        function initShader(gl) {
+
+            // laduje i kompiluje shader fragmentów i wierzcholków
+            //var fragmentShader = getShader(gl, "fragmentShader");
+            //var vertexShader = getShader(gl, "vertexShader");
+            var fragmentShader = createShader(gl, fragmentShaderSource, "fragment");
+            var vertexShader = createShader(gl, vertexShaderSource, "vertex");
+
+            // laczy je w nowy program
+            shaderProgram = gl.createProgram();
+            gl.attachShader(shaderProgram, vertexShader);
+            gl.attachShader(shaderProgram, fragmentShader);
+            gl.linkProgram(shaderProgram);
+
+            // pobiera wskazniki do parametrów shadera
+            shaderVertexPositionAttribute = gl.getAttribLocation(shaderProgram, "vertexPos");
+            gl.enableVertexAttribArray(shaderVertexPositionAttribute);
+
+            shaderTexCoordAttribute = gl.getAttribLocation(shaderProgram, "texCoord");
+            gl.enableVertexAttribArray(shaderTexCoordAttribute);
+
+            shaderProjectionMatrixUniform = gl.getUniformLocation(shaderProgram, "projectionMatrix");
+            shaderModelViewMatrixUniform = gl.getUniformLocation(shaderProgram, "modelViewMatrix");
+            shaderSamplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+
+            if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+                alert("Nie mozna zainicjowac shaderów");
+            }
+        }
+
+        function initWebGL(canvas) {
+
+            var gl = null;
+            var msg = "Twoja przegladarka nie obsluguje WebGL " +
+                "albo jej obsluga jest wylaczona.";
+            try
+            {
+                gl = canvas.getContext("experimental-webgl");
+            }
+            catch (e)
+            {
+                msg = "Blad tworzenia kontekstu WebGL!: " + e.toString();
+            }
+
+            if (!gl)
+            {
+                alert(msg);
+                throw new Error(msg);
+            }
+
+            return gl;
+        }
+
+        function initViewport(gl, canvas) {
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+
+        function initTexture(gl) {
+            webGLTexture = gl.createTexture();
+            webGLTexture.image = new Image();
+            webGLTexture.image.onload = function () {
+                handleTextureLoaded(gl, webGLTexture)
+            }
+
+            webGLTexture.image.src = "../images/webgl-logo-256.jpg";
+        }
+
+        $(document).ready(
+            function() {
+                var canvas = document.getElementById("webglcanvas");
+                var gl = initWebGL(canvas);
+                initViewport(gl, canvas);
+                //initMatrices(canvas); //TODO
+                initShader(gl);
+                initTexture(gl);
+                //run(gl, cube); //TODO
+            }
+        );
     </script>
     <style></style>
   </head>
