@@ -41,14 +41,14 @@
             cylinderGeometry.rotation.z += angle;
             cylinderGeometry.rotation.x += angle; **/
         }
-        function rotateScene(deltax)
+        function rotateScene(deltax, deltay)
         {
-            camera.rotation.x += deltax / 100;
+            camera.rotation.x += deltay / 300;
             $("#rotation").html("obrót: 0," + camera.rotation.x.toFixed(2) + ",0");
-            camera.rotation.y += deltax / 100;
+            camera.rotation.y += deltax / 300;
             $("#rotation").html("obrót: 0," + camera.rotation.y.toFixed(2) + ",0");
-            camera.rotation.z += deltax / 100;
-            $("#rotation").html("obrót: 0," + camera.rotation.z.toFixed(2) + ",0");
+            //camera.rotation.z += deltax / 300;
+            //$("#rotation").html("obrót: 0," + camera.rotation.z.toFixed(2) + ",0");
         }
 
         function scaleScene(scale)
@@ -58,7 +58,8 @@
         }
 
         var mouseDown = false,
-            pageX = 0;
+            pageX = 0,
+            pageY = 0;
 
         function onMouseMove(evt)
         {
@@ -68,8 +69,10 @@
             evt.preventDefault();
 
             var deltax = evt.pageX - pageX;
+            var deltay = evt.pageY - pageY;
             pageX = evt.pageX;
-            rotateScene(deltax);
+            pageY = evt.pageY;
+            rotateScene(deltax, deltay);
         }
 
         function onMouseDown(evt)
@@ -78,6 +81,7 @@
 
             mouseDown = true;
             pageX = evt.pageX;
+            pageY = evt.pageY;
         }
 
         function onMouseUp(evt)
@@ -116,9 +120,8 @@
                 scene = new THREE.Scene();
                 camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 4000 );
                 scene.add(camera);
-                camera.position.z = 5;
-                camera.position.y = 1;
-                camera.rotation.x = -5 * Math.PI / 180;
+                //camera.position.z = 5;
+                //camera.position.y = 1;
 
                 document.body.appendChild(renderer.domElement);
 
@@ -135,6 +138,8 @@
                 var cylinderGeometry = new THREE.CylinderGeometry(.4, .4, 1, 32, 0, false, 0, Math.PI);
                 var material = new THREE.MeshPhongMaterial({color: 0xffeedd, side: THREE.DoubleSide, map: texture});
                 objects["cylinder"] = new THREE.Mesh(cylinderGeometry, material);
+                objects.cylinder.position.z = -5;
+                //objects.cylinder.position.y = 1;
 
                 for (var key in objects) {
                     scene.add(objects[key]);
