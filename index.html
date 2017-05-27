@@ -1,195 +1,81 @@
 <html>
   <head>
     <title>Wymodelowanie uproszczonej wersji mechanizmu, np. ruchomego modelu silnika tłokowego</title>
-    <meta content="">
-    <script src="lib/jquery-1.9.1/jquery-1.9.1.js"></script>
-    <script src="lib/gl-matrix/gl-matrix.js"></script>
-    <script src="lib/requestAnimationFrame/RequestAnimationFrame.js"></script>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      <script src="lib/jquery-1.9.1/jquery-1.9.1.js"></script>
+      <script src="lib/three.js.r58/three.js"></script>
+      <script src="lib/requestAnimationFrame/RequestAnimationFrame.js"></script>
+  </head>
+  <body>
+
+    <canvas id="webglcanvas" style="border: none;" width="500" height="500" background="red"></canvas>
+
     <script type="text/javascript">
+        var renderer = null,
+            scene = null,
+            camera = null,
+            myTime = Date.now(),
+            period = 5000,
+            objects = {};
 
-        var ShaderType = {
-            VERTEX: "v",
-            FRAGMENT: "f"
-        };
+        function animate() {
 
-        var projectionMatrix, modelViewMatrix;
-        var rotationAxis;
-
-        var shaderProgram, shaderVertexPositionAttribute, shaderVertexColorAttribute,
-            shaderProjectionMatrixUniform, shaderModelViewMatrixUniform, shaderSamplerUniform;
-
-        var vertexShaderSource =
-
-            "    attribute vec3 vertexPos;\n" +
-            "    attribute vec2 texCoord;\n" +
-            "    uniform mat4 modelViewMatrix;\n" +
-            "    uniform mat4 projectionMatrix;\n" +
-            "    varying vec2 vTexCoord;\n" +
-            "    void main(void) {\n" +
-            "		// Zwraca przeksztalcona i rzutowana wartosc wierzcholka\n" +
-            "        gl_Position = projectionMatrix * modelViewMatrix * \n" +
-            "            vec4(vertexPos, 1.0);\n" +
-            "        // Wysyla wspólrzedna teksturowa do vTexCoord\n" +
-            "        vTexCoord = texCoord;\n" +
-            "    }\n";
-
-        var fragmentShaderSource =
-            "    precision mediump float;\n" +
-            "    varying vec2 vTexCoord;\n" +
-            "    uniform sampler2D uSampler;\n" +
-            "    void main(void) {\n" +
-            "    // Zwraca kolor piksela: zawsze bialy\n" +
-            "    gl_FragColor = texture2D(uSampler, vec2(vTexCoord.s, vTexCoord.t));\n" +
-            "}\n";
-
-        function initWebGL(canvas) {
-
-            var gl = null;
-            var msg = "Twoja przegladarka nie obsluguje WebGL " +
-                "albo jej obsluga jest wylaczona.";
-            try
-            {
-                gl = canvas.getContext("experimental-webgl");
-            }
-            catch (e)
-            {
-                msg = "Blad tworzenia kontekstu WebGL!: " + e.toString();
-            }
-
-            if (!gl)
-            {
-                alert(msg);
-                throw new Error(msg);
-            }
-
-            return gl;
-        }
-
-        function initShader(gl) {
-
-            // laduje i kompiluje shader fragmentów i wierzcholków
-            //var fragmentShader = getShader(gl, "fragmentShader");
-            //var vertexShader = getShader(gl, "vertexShader");
-            var fragmentShader = createShader(gl, fragmentShaderSource, "fragment");
-            var vertexShader = createShader(gl, vertexShaderSource, "vertex");
-
-            // laczy je w nowy program
-            shaderProgram = gl.createProgram();
-            gl.attachShader(shaderProgram, vertexShader);
-            gl.attachShader(shaderProgram, fragmentShader);
-            gl.linkProgram(shaderProgram);
-
-            // pobiera wskazniki do parametrów shadera
-            shaderVertexPositionAttribute = gl.getAttribLocation(shaderProgram, "vertexPos");
-            gl.enableVertexAttribArray(shaderVertexPositionAttribute);
-
-            shaderTexCoordAttribute = gl.getAttribLocation(shaderProgram, "texCoord");
-            gl.enableVertexAttribArray(shaderTexCoordAttribute);
-
-            shaderProjectionMatrixUniform = gl.getUniformLocation(shaderProgram, "projectionMatrix");
-            shaderModelViewMatrixUniform = gl.getUniformLocation(shaderProgram, "modelViewMatrix");
-            shaderSamplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
-
-            if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-                alert("Nie mozna zainicjowac shaderów");
+            for (var key in objects) {
+                objects[key].rotation.z = (Date.now() - myTime) / period * 2 * Math.PI;
+                objects[key].rotation.y = (Date.now() - myTime) / period * 2 * Math.PI / 2;
             }
         }
 
-        function createShader(gl, str, type) {
-            var shader;
-            if (type === ShaderType.FRAGMENT) {
-                shader = gl.createShader(gl.FRAGMENT_SHADER);
-            } else if (type === ShaderType.VERTEX) {
-                shader = gl.createShader(gl.VERTEX_SHADER);
-            } else {
-                return null;
-            }
+        function doThings() {
+            requestAnimationFrame(function() { doThings(); });
 
-            gl.shaderSource(shader, str);
-            gl.compileShader(shader);
+            // Renderuje scenę
+            renderer.render( scene, camera );
 
-            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                alert(gl.getShaderInfoLog(shader));
-                return null;
-            }
+            // Obraca kostką w następnej klatce
+            animate();
 
-            return shader;
-        }
-
-        function initViewport(gl, canvas) {
-            gl.viewport(0, 0, canvas.width, canvas.height);
-        }
-
-        var webGLTexture;
-
-        function initTexture(gl) {
-            webGLTexture = gl.createTexture();
-            webGLTexture.image = new Image();
-            webGLTexture.image.onload = function () {
-                handleTextureLoaded(gl, webGLTexture)
-            };
-
-            webGLTexture.image.src = "images/foo.jpg";
-        }
-
-        function initMatrices(canvas)
-        {
-            // Tworzy macierz model-widok z obiektem w punkcie 0, 0, -8
-            modelViewMatrix = mat4.create();
-            mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -8]);
-
-            // Tworzy macierz rzutowania z 45-stopniowym polem widzenia
-            projectionMatrix = mat4.create();
-            mat4.perspective(projectionMatrix, Math.PI / 4, canvas.width / canvas.height, 1, 10000);
-
-            rotationAxis = vec3.create();
-            vec3.normalize(rotationAxis, [1, 1, 1]);
-        }
-
-        function draw(gl, obj) {
-
-            // wyczyszczenie tla na czarno
-            gl.clearColor(0.0, 0.0, 0.0, 1.0);
-            gl.enable(gl.DEPTH_TEST);
-            gl.clear(gl.COLOR_BUFFER_BIT  | gl.DEPTH_BUFFER_BIT);
-
-            // ustawia shader do uzycia
-            gl.useProgram(shaderProgram);
-
-            // podlacza parametry shadera: pozycja wierzcholków, wspólrzedne teksturowe, macierze rzutowania i modelu oraz tekstury
-            gl.bindBuffer(gl.ARRAY_BUFFER, obj.buffer);
-            gl.vertexAttribPointer(shaderVertexPositionAttribute, obj.vertSize, gl.FLOAT, false, 0, 0);
-            gl.bindBuffer(gl.ARRAY_BUFFER, obj.texCoordBuffer);
-            gl.vertexAttribPointer(shaderTexCoordAttribute, obj.texCoordSize, gl.FLOAT, false, 0, 0);
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.indices);
-
-            gl.uniformMatrix4fv(shaderProjectionMatrixUniform, false, projectionMatrix);
-            gl.uniformMatrix4fv(shaderModelViewMatrixUniform, false, modelViewMatrix);
-
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, webGLTexture);
-            gl.uniform1i(shaderSamplerUniform, 0);
-
-            // rysuje obiekt
-            gl.drawElements(obj.primtype, obj.nIndices, gl.UNSIGNED_SHORT, 0);
         }
 
         $(document).ready(
             function() {
-                var canvas = document.getElementById("webglcanvas");
-                var gl = initWebGL(canvas);
-                initViewport(gl, canvas);
-                initMatrices(canvas);
-                initShader(gl);
-                initTexture(gl);
-                //run(gl, cube); //TODO
 
+                var canvas = document.getElementById("webglcanvas");
+                renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setClearColor(0x00ff00, 1);
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 4000 );
+                scene.add(camera);
+                camera.position.z = 5;
+
+                document.body.appendChild(renderer.domElement);
+
+                var textureFile = "images/foo.jpg";
+                var texture = THREE.ImageUtils.loadTexture(textureFile);
+
+                var cylinderGeometry = new THREE.CylinderGeometry(.4,.4,2,32,1, true);
+                var material = new THREE.MeshPhongMaterial({color: 0xffeedd, side:THREE.DoubleSide, map: texture});
+                objects["cylinder"] = new THREE.Mesh(cylinderGeometry, material);
+
+                // create a point light
+                var light = new THREE.PointLight();
+
+                // set its position
+                light.position.x = 0;
+                light.position.y = 0;
+                light.position.z = 10;
+
+                // add to the scene
+                scene.add(light);
+
+                for (var key in objects) {
+                    scene.add(objects[key]);
+                }
+                doThings();
             }
         );
+
     </script>
-    <style></style>
-  </head>
-  <body>
-    <canvas id="webglcanvas" style="border: none;" width="500" height="500"></canvas>
   </body>
 </html>

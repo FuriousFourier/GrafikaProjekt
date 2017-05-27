@@ -1,0 +1,161 @@
+<!--<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Programming 3D Applications in HTML5 and WebGL &mdash; kostka w Three.js</title>
+
+<script src="../lib/jquery-1.9.1/jquery-1.9.1.js"></script>
+<script src="../lib/three.js.r58/three.js"></script>
+<script src="../lib/requestAnimationFrame/RequestAnimationFrame.js"></script>
+
+
+</head>
+<body>
+
+    <canvas id="webglcanvas" style="border: none;background-color:#000000" width="500" height="500"></canvas>
+
+    <script type="text/javascript">
+        var renderer = null,
+            scene = null,
+            camera = null,
+            cube = null,
+            cone = null;
+
+        var duration = 5000; // ms
+        var currentTime = Date.now();
+        function animate() {
+
+            var now = Date.now();
+            var deltat = now - currentTime;
+            currentTime = now;
+            var fract = deltat / duration;
+            var angle = Math.PI * 2 * fract;
+            cube.rotation.y += angle;
+            cone.rotation.x += angle/2;
+        }
+
+        function run() {
+            requestAnimationFrame(function() { run(); });
+
+            // Renderuje scenę
+            renderer.render( scene, camera );
+
+            // Obraca kostką w następnej klatce
+            animate();
+
+        }
+
+        $(document).ready(
+            function() {
+
+                var canvas = document.getElementById("webglcanvas");
+
+                // Tworzy renderer Three.js i wiąże go z kanwą
+                renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
+
+                // Ustawia rozmiar obszaru widoku
+                //renderer.setSize(canvas.width, canvas.height);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setClearColorHex(0x000000, 1);
+
+                // Tworzy nową scenę Three.js
+                scene = new THREE.Scene();
+
+                // Dodaje kamerę, aby można było zobaczyć scenę
+                camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 4000 );
+                scene.add(camera);
+
+                document.body.appendChild(renderer.domElement);
+
+                // Tworzy pokrytą teksturą kostkę i dodaje ją do sceny
+                // Najpierw tworzy się teksturę
+                var mapUrl = "images/foo.jpg";
+                var map = THREE.ImageUtils.loadTexture(mapUrl);
+
+                // Następnie tworzy się podstawowy materiał
+                var material = new THREE.MeshBasicMaterial({ map: map, color: 0xffffff});
+
+                // Utworzenie geometrii kostki
+                var geometry = new THREE.CubeGeometry(4, 4, 4);
+
+                // Wstawienie geometrii i materiału do siatki
+                cube = new THREE.Mesh(geometry, material);
+
+                // Odsunięcie siatki od kamery i pochylenie jej w kierunku użytkownika
+                cube.position.z = -8;
+                cube.rotation.x = Math.PI / 5;
+                cube.rotation.y = Math.PI / 5;
+
+                // Dodanie siatki do sceny
+                scene.add( cube );
+
+
+                var cylinderGeometry = new THREE.CylinderGeometry(.4,.4,2,32,1, true);
+                var material2 = new THREE.MeshPhongMaterial({color: 0xffffff, side:THREE.DoubleSide, map: map});
+                cone = new THREE.Mesh(cylinderGeometry, material2);
+                scene.add(cone);
+
+                // create a point light
+                var pointLight = new THREE.PointLight( 0xFFFF8F );
+
+                // set its position
+                pointLight.position.x = 10;
+                pointLight.position.y = 50;
+                pointLight.position.z = 130;
+
+                // add to the scene
+                scene.add(pointLight);
+
+                camera.position.z = 5;
+
+                // Uruchomienie pętli
+                run();
+            }
+        );
+
+    </script>
+
+    <!--
+<script type = "text/javascript">
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
+
+    var renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    var geometry = new THREE.CylinderGeometry(1,.4,2,32,1, true);
+    var material = new THREE.MeshPhongMaterial({color: 0xffffff, side:THREE.DoubleSide});
+    var cone = new THREE.Mesh(geometry, material);
+    scene.add(cone);
+
+    // create a point light
+    var pointLight = new THREE.PointLight( 0xFFFF8F );
+
+    // set its position
+    pointLight.position.x = 10;
+    pointLight.position.y = 50;
+    pointLight.position.z = 130;
+
+    // add to the scene
+    scene.add(pointLight);
+
+
+    camera.position.z = 5;
+
+    var render = function () {
+        requestAnimationFrame(render);
+
+        cone.rotation.x += 0.01;
+        cone.rotation.y += 0.001;
+        cone.rotation.z -= 0.02;
+
+        renderer.render(scene, camera);
+    };
+
+    render();
+</script>
+-->
+
+</body>
+
+</html>
