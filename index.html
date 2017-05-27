@@ -134,15 +134,20 @@
                 scene.add(light);
 
                 var cylinderGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 32, 1, false);
+                var cylinderGeometry1 = new THREE.CylinderGeometry(0.1, 0.12, 0.5, 32, 1, false);
                 var counterweightGeometry = new THREE.SphereGeometry(0.5, 32, 32, 0, Math.PI, 0, Math.PI);
                 var material = new THREE.MeshPhongMaterial({color: 0xffeedd, side: THREE.DoubleSide, map: texture});
                 objects["cylinder"] = new THREE.Mesh(cylinderGeometry, material);
+                objects["cylinder1"] = new THREE.Mesh(cylinderGeometry1, material);
                 objects.cylinder.position.z = -5;
-                objects.cylinder.position.y = 0.5;
+                objects.cylinder.position.y = 1;
+                objects.cylinder1.position.z = -3;
+                objects.cylinder1.position.y = 0.11;
                 objects.cylinder.name = "cylinder";
+                objects.cylinder1.name = "cylinder1";
                 objects["counterweight"] = new THREE.Mesh(counterweightGeometry, material);
                 objects.counterweight.position.z = -5;
-                objects.counterweight.position.y = -0.5;
+                objects.counterweight.position.y = -0.25;
                 objects.counterweight.name = "counterweight";
                 objects.counterweight.rotation.x = Math.PI / 2;
                 //objects.counterweight.rotation.y = Math.PI / 2;
