@@ -17,11 +17,12 @@
             camera = null,
             myTime = Date.now(),
             period = 5000,
-            tmp = 0,
             objects = {};
 
         function animate() {
-            dummyRotation(objects);
+            //dummyRotation(objects);
+            var object = objects.counterweight;
+            objects.counterweight.rotation.y = - (Date.now() - myTime) / period * 2 * Math.PI;
         }
 
         function dummyRotation(solids) {
@@ -120,30 +121,36 @@
                 scene = new THREE.Scene();
                 camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 4000 );
                 scene.add(camera);
-                //camera.position.z = 5;
-                //camera.position.y = 1;
 
                 document.body.appendChild(renderer.domElement);
 
                 var textureFile = "images/foo.jpg";
                 var texture = THREE.ImageUtils.loadTexture(textureFile);
 
-                // create a point light
                 var light = new THREE.PointLight();
                 light.position.x = 0;
                 light.position.y = 0;
                 light.position.z = 10;
                 scene.add(light);
 
-                var cylinderGeometry = new THREE.CylinderGeometry(.4, .4, 1, 32, 0, false, 0, Math.PI);
+                var cylinderGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 32, 1, false);
+                var counterweightGeometry = new THREE.SphereGeometry(0.5, 32, 32, 0, Math.PI, 0, Math.PI);
                 var material = new THREE.MeshPhongMaterial({color: 0xffeedd, side: THREE.DoubleSide, map: texture});
                 objects["cylinder"] = new THREE.Mesh(cylinderGeometry, material);
                 objects.cylinder.position.z = -5;
-                //objects.cylinder.position.y = 1;
+                objects.cylinder.position.y = 0.5;
+                objects.cylinder.name = "cylinder";
+                objects["counterweight"] = new THREE.Mesh(counterweightGeometry, material);
+                objects.counterweight.position.z = -5;
+                objects.counterweight.position.y = -0.5;
+                objects.counterweight.name = "counterweight";
+                objects.counterweight.rotation.x = Math.PI / 2;
+                //objects.counterweight.rotation.y = Math.PI / 2;
 
                 for (var key in objects) {
                     scene.add(objects[key]);
                 }
+
                 doThings();
 
                 // dodaje obsługę myszy, aby można było obracać scenę
