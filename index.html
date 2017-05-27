@@ -43,8 +43,8 @@
         }
         function rotateScene(deltax)
         {
-            root.rotation.y += deltax / 100;
-            $("#rotation").html("obrót: 0," + root.rotation.y.toFixed(2) + ",0");
+            camera.rotation.y += deltax / 100;
+            $("#rotation").html("obrót: 0," + camera.rotation.y.toFixed(2) + ",0");
         }
 
         function scaleScene(scale)
