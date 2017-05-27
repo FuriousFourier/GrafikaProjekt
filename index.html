@@ -5,6 +5,7 @@
       <script src="lib/jquery-1.9.1/jquery-1.9.1.js"></script>
       <script src="lib/three.js.r58/three.js"></script>
       <script src="lib/requestAnimationFrame/RequestAnimationFrame.js"></script>
+      <script src="lib/gl-matrix/gl-matrix.js"></script>
   </head>
   <body>
 
@@ -16,13 +17,17 @@
             camera = null,
             myTime = Date.now(),
             period = 5000,
+            tmp = 0,
             objects = {};
 
         function animate() {
+            dummyRotation(objects);
+        }
 
-            for (var key in objects) {
-                objects[key].rotation.z = (Date.now() - myTime) / period * 2 * Math.PI;
-                objects[key].rotation.y = (Date.now() - myTime) / period * 2 * Math.PI / 2;
+        function dummyRotation(solids) {
+            for (var key in solids) {
+                solids[key].rotation.z = (Date.now() - myTime) / period * 2 * Math.PI;
+                solids[key].rotation.y = (Date.now() - myTime) / period * 2 * Math.PI / 2;
             }
           /**  var now = Date.now();
             var deltat = now - currentTime;
@@ -91,11 +96,8 @@
 
         function doThings() {
             requestAnimationFrame(function() { doThings(); });
-
-            // Renderuje scenę
             renderer.render( scene, camera );
 
-            // Obraca kostką w następnej klatce
             animate();
 
         }
@@ -111,26 +113,24 @@
                 camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 4000 );
                 scene.add(camera);
                 camera.position.z = 5;
+                camera.position.y = 1;
+                camera.rotation.x = -5 * Math.PI / 180;
 
                 document.body.appendChild(renderer.domElement);
 
                 var textureFile = "images/foo.jpg";
                 var texture = THREE.ImageUtils.loadTexture(textureFile);
 
-                var cylinderGeometry = new THREE.CylinderGeometry(.4,.4,2,32,1, true);
-                var material = new THREE.MeshPhongMaterial({color: 0xffeedd, side:THREE.DoubleSide, map: texture});
-                objects["cylinder"] = new THREE.Mesh(cylinderGeometry, material);
-
                 // create a point light
                 var light = new THREE.PointLight();
-
-                // set its position
                 light.position.x = 0;
                 light.position.y = 0;
                 light.position.z = 10;
-
-                // add to the scene
                 scene.add(light);
+
+                var cylinderGeometry = new THREE.CylinderGeometry(.4, .4, 1, 32, 0, false, 0, Math.PI);
+                var material = new THREE.MeshPhongMaterial({color: 0xffeedd, side: THREE.DoubleSide, map: texture});
+                objects["cylinder"] = new THREE.Mesh(cylinderGeometry, material);
 
                 for (var key in objects) {
                     scene.add(objects[key]);
