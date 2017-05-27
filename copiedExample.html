@@ -1,0 +1,93 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Programming 3D Applications in HTML5 and WebGL &mdash; kostka w Three.js</title>
+
+<script src="lib/jquery-1.9.1/jquery-1.9.1.js"></script>
+<script src="lib/three.js.r58/three.js"></script>
+<script src="lib/requestAnimationFrame/RequestAnimationFrame.js"></script>
+<script type="text/javascript">
+
+	var renderer = null, 
+	scene = null, 
+	camera = null,
+	cube = null;
+	
+    var duration = 5000; // ms
+    var currentTime = Date.now();
+	function animate() {
+		
+        var now = Date.now();
+        var deltat = now - currentTime;
+        currentTime = now;
+        var fract = deltat / duration;
+        var angle = Math.PI * 2 * fract;
+		cube.rotation.y += angle;
+	}
+
+	function run() {
+        requestAnimationFrame(function() { run(); });
+        
+			// Renderuje scenę
+			renderer.render( scene, camera );
+
+			// Obraca kostką w następnej klatce
+			animate();
+				
+    }
+    
+	$(document).ready(
+			function() {
+
+				var canvas = document.getElementById("webglcanvas");
+
+		        // Tworzy renderer Three.js i wiąże go z kanwą
+			    renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
+
+			    // Ustawia rozmiar obszaru widoku
+			    renderer.setSize(canvas.width, canvas.height);
+
+			    // Tworzy nową scenę Three.js
+			    scene = new THREE.Scene();
+
+			    // Dodaje kamerę, aby można było zobaczyć scenę
+		        camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 4000 );
+				scene.add(camera);
+				
+		        // Tworzy pokrytą teksturą kostkę i dodaje ją do sceny
+		        // Najpierw tworzy się teksturę
+		        var mapUrl = "images/foo.jpg";
+		        var map = THREE.ImageUtils.loadTexture(mapUrl);
+		        
+		        // Następnie tworzy się podstawowy materiał
+		        var material = new THREE.MeshBasicMaterial({ map: map });
+
+		        // Utworzenie geometrii kostki
+		        var geometry = new THREE.CubeGeometry(2, 2, 2);
+
+		        // Wstawienie geometrii i materiału do siatki
+		        cube = new THREE.Mesh(geometry, material);
+
+		        // Odsunięcie siatki od kamery i pochylenie jej w kierunku użytkownika
+		        cube.position.z = -8;
+		        cube.rotation.x = Math.PI / 5;
+		        cube.rotation.y = Math.PI / 5;
+
+		        // Dodanie siatki do sceny
+		        scene.add( cube );
+
+		        // Uruchomienie pętli
+		        run();
+			}
+	);
+
+</script>
+
+</head>
+<body>
+
+    <canvas id="webglcanvas" style="border: none;background-color:#000000" width="500" height="500"></canvas>
+
+</body>
+
+</html>

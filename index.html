@@ -2,17 +2,68 @@
   <head>
     <title>Wymodelowanie uproszczonej wersji mechanizmu, np. ruchomego modelu silnika tłokowego</title>
     <meta content="">
-    <script src="../libs/jquery-1.9.1/jquery-1.9.1.js"></script>
-    <script src="../libs/gl-matrix/gl-matrix.js"></script>
-    <script src="../libs/requestAnimationFrame/RequestAnimationFrame.js"></script>
+    <script src="lib/jquery-1.9.1/jquery-1.9.1.js"></script>
+    <script src="lib/gl-matrix/gl-matrix.js"></script>
+    <script src="lib/requestAnimationFrame/RequestAnimationFrame.js"></script>
     <script type="text/javascript">
-        var fragmentShaderSource =
-            "void main(void) {\n" +
-            "}\n";
+
+        var ShaderType = {
+            VERTEX: "v",
+            FRAGMENT: "f"
+        };
+
+        var projectionMatrix, modelViewMatrix;
+        var rotationAxis;
+
+        var shaderProgram, shaderVertexPositionAttribute, shaderVertexColorAttribute,
+            shaderProjectionMatrixUniform, shaderModelViewMatrixUniform, shaderSamplerUniform;
 
         var vertexShaderSource =
-            "void main(void) {\n" +
+
+            "    attribute vec3 vertexPos;\n" +
+            "    attribute vec2 texCoord;\n" +
+            "    uniform mat4 modelViewMatrix;\n" +
+            "    uniform mat4 projectionMatrix;\n" +
+            "    varying vec2 vTexCoord;\n" +
+            "    void main(void) {\n" +
+            "		// Zwraca przeksztalcona i rzutowana wartosc wierzcholka\n" +
+            "        gl_Position = projectionMatrix * modelViewMatrix * \n" +
+            "            vec4(vertexPos, 1.0);\n" +
+            "        // Wysyla wspólrzedna teksturowa do vTexCoord\n" +
+            "        vTexCoord = texCoord;\n" +
+            "    }\n";
+
+        var fragmentShaderSource =
+            "    precision mediump float;\n" +
+            "    varying vec2 vTexCoord;\n" +
+            "    uniform sampler2D uSampler;\n" +
+            "    void main(void) {\n" +
+            "    // Zwraca kolor piksela: zawsze bialy\n" +
+            "    gl_FragColor = texture2D(uSampler, vec2(vTexCoord.s, vTexCoord.t));\n" +
             "}\n";
+
+        function initWebGL(canvas) {
+
+            var gl = null;
+            var msg = "Twoja przegladarka nie obsluguje WebGL " +
+                "albo jej obsluga jest wylaczona.";
+            try
+            {
+                gl = canvas.getContext("experimental-webgl");
+            }
+            catch (e)
+            {
+                msg = "Blad tworzenia kontekstu WebGL!: " + e.toString();
+            }
+
+            if (!gl)
+            {
+                alert(msg);
+                throw new Error(msg);
+            }
+
+            return gl;
+        }
 
         function initShader(gl) {
 
@@ -44,41 +95,83 @@
             }
         }
 
-        function initWebGL(canvas) {
-
-            var gl = null;
-            var msg = "Twoja przegladarka nie obsluguje WebGL " +
-                "albo jej obsluga jest wylaczona.";
-            try
-            {
-                gl = canvas.getContext("experimental-webgl");
-            }
-            catch (e)
-            {
-                msg = "Blad tworzenia kontekstu WebGL!: " + e.toString();
+        function createShader(gl, str, type) {
+            var shader;
+            if (type === ShaderType.FRAGMENT) {
+                shader = gl.createShader(gl.FRAGMENT_SHADER);
+            } else if (type === ShaderType.VERTEX) {
+                shader = gl.createShader(gl.VERTEX_SHADER);
+            } else {
+                return null;
             }
 
-            if (!gl)
-            {
-                alert(msg);
-                throw new Error(msg);
+            gl.shaderSource(shader, str);
+            gl.compileShader(shader);
+
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                alert(gl.getShaderInfoLog(shader));
+                return null;
             }
 
-            return gl;
+            return shader;
         }
 
         function initViewport(gl, canvas) {
             gl.viewport(0, 0, canvas.width, canvas.height);
         }
 
+        var webGLTexture;
+
         function initTexture(gl) {
             webGLTexture = gl.createTexture();
             webGLTexture.image = new Image();
             webGLTexture.image.onload = function () {
                 handleTextureLoaded(gl, webGLTexture)
-            }
+            };
 
-            webGLTexture.image.src = "../images/webgl-logo-256.jpg";
+            webGLTexture.image.src = "images/foo.jpg";
+        }
+
+        function initMatrices(canvas)
+        {
+            // Tworzy macierz model-widok z obiektem w punkcie 0, 0, -8
+            modelViewMatrix = mat4.create();
+            mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -8]);
+
+            // Tworzy macierz rzutowania z 45-stopniowym polem widzenia
+            projectionMatrix = mat4.create();
+            mat4.perspective(projectionMatrix, Math.PI / 4, canvas.width / canvas.height, 1, 10000);
+
+            rotationAxis = vec3.create();
+            vec3.normalize(rotationAxis, [1, 1, 1]);
+        }
+
+        function draw(gl, obj) {
+
+            // wyczyszczenie tla na czarno
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.enable(gl.DEPTH_TEST);
+            gl.clear(gl.COLOR_BUFFER_BIT  | gl.DEPTH_BUFFER_BIT);
+
+            // ustawia shader do uzycia
+            gl.useProgram(shaderProgram);
+
+            // podlacza parametry shadera: pozycja wierzcholków, wspólrzedne teksturowe, macierze rzutowania i modelu oraz tekstury
+            gl.bindBuffer(gl.ARRAY_BUFFER, obj.buffer);
+            gl.vertexAttribPointer(shaderVertexPositionAttribute, obj.vertSize, gl.FLOAT, false, 0, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, obj.texCoordBuffer);
+            gl.vertexAttribPointer(shaderTexCoordAttribute, obj.texCoordSize, gl.FLOAT, false, 0, 0);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.indices);
+
+            gl.uniformMatrix4fv(shaderProjectionMatrixUniform, false, projectionMatrix);
+            gl.uniformMatrix4fv(shaderModelViewMatrixUniform, false, modelViewMatrix);
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, webGLTexture);
+            gl.uniform1i(shaderSamplerUniform, 0);
+
+            // rysuje obiekt
+            gl.drawElements(obj.primtype, obj.nIndices, gl.UNSIGNED_SHORT, 0);
         }
 
         $(document).ready(
@@ -86,10 +179,11 @@
                 var canvas = document.getElementById("webglcanvas");
                 var gl = initWebGL(canvas);
                 initViewport(gl, canvas);
-                //initMatrices(canvas); //TODO
+                initMatrices(canvas);
                 initShader(gl);
                 initTexture(gl);
                 //run(gl, cube); //TODO
+
             }
         );
     </script>
