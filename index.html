@@ -193,7 +193,7 @@
                 objects["canal12"] = new THREE.Mesh(canal11Geometry, material2);
                 objects["canal22"] = new THREE.Mesh(canal11Geometry, material2);
 
-                dummyCrankshaftTranslation = new THREE.Vector3(0, -cylinderGeometry1.height / 2 - dummyCrankshaftGeometry.height/2, 0);
+                dummyCrankshaftTranslation = new THREE.Vector3(0, -cylinderGeometry1.height / 2 - dummyCrankshaftGeometry.height/2 + 0.04, 0);
                 objects.dummyCrankshaft.rotation = objects.cone.rotation;
                 objects.counterweight.position = objects.cone.position.clone().add(new THREE.Vector3(0, startDCpos, 0));
                 objects.counterweight.name = "counterweight";
