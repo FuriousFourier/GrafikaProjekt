@@ -145,8 +145,10 @@
 
                 document.body.appendChild(renderer.domElement);
 
-                var textureFile = "images/chess.png";
+                var textureFile = "images/mur.jpg";
+                var texture2File = "images/chess.png";
                 var texture = THREE.ImageUtils.loadTexture(textureFile);
+                var texture2 = THREE.ImageUtils.loadTexture(texture2File);
 
                 var light = new THREE.PointLight();
                 light.position.x = 0;
@@ -162,9 +164,10 @@
                 var counterweightGeometry = new THREE.SphereGeometry(dummyCrankshaftGeometry.height, 32, 32, 0, Math.PI, 0, Math.PI);
                 var canal11Geometry = new THREE.CylinderGeometry(cylinderGeometry.radiusTop * (0.3), cylinderGeometry.radiusTop * (0.3), cylinderGeometry.height * 0.6, 32, 1, true);
                 var material = new THREE.MeshPhongMaterial({color: 0xffeedd, side: THREE.DoubleSide, map: texture});
+                var material2 = new THREE.MeshPhongMaterial({color: 0xffeedd, side: THREE.DoubleSide, map: texture2});
                 startDCpos = -cylinderGeometry1.height / 2 - dummyCrankshaftGeometry.height/2;
                 objects["cylinder"] = new THREE.Mesh(cylinderGeometry, material);
-                objects["cone"] = new THREE.Mesh(cylinderGeometry1, material);
+                objects["cone"] = new THREE.Mesh(cylinderGeometry1, material2);
                 objects.cylinder.position = new THREE.Vector3(0, cylinderGeometry.height / 2, startZPosition);
                 basicConePosition = new THREE.Vector3(0, cylinderGeometry.height / 9, objects.cylinder.position.z);
                 objects.cone.position = basicConePosition.clone();
@@ -185,10 +188,10 @@
                 //objects.crankshaft.rotation.x = Math.PI / 2;
                 objects["counterweight"] = new THREE.Mesh(counterweightGeometry, material);
                 objects["dummyCrankshaft"] = new THREE.Mesh(dummyCrankshaftGeometry, material);
-                objects["canal11"] = new THREE.Mesh(canal11Geometry, material);
-                objects["canal21"] = new THREE.Mesh(canal11Geometry, material);
-                objects["canal12"] = new THREE.Mesh(canal11Geometry, material);
-                objects["canal22"] = new THREE.Mesh(canal11Geometry, material);
+                objects["canal11"] = new THREE.Mesh(canal11Geometry, material2);
+                objects["canal21"] = new THREE.Mesh(canal11Geometry, material2);
+                objects["canal12"] = new THREE.Mesh(canal11Geometry, material2);
+                objects["canal22"] = new THREE.Mesh(canal11Geometry, material2);
 
                 dummyCrankshaftTranslation = new THREE.Vector3(0, -cylinderGeometry1.height / 2 - dummyCrankshaftGeometry.height/2, 0);
                 objects.dummyCrankshaft.rotation = objects.cone.rotation;
