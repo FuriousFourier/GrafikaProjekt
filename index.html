@@ -27,7 +27,8 @@
         function animate() {
             //dummyRotation(objects);
             var cylinder1RotationYFi = Math.PI / 2;
-            objects.counterweight.rotation.y = - (Date.now() - myTime) / period * 2 * Math.PI;
+            var counterweightRotationFi = - Math.PI / 2;
+            objects.counterweight.rotation.y = - (Date.now() - myTime) / period * 2 * Math.PI + counterweightRotationFi;
             objects.cone.rotation.z =  0.5 * Math.sin((Date.now() - myTime) / period * 2 * Math.PI + cylinder1RotationYFi);
             var variousPos = 0.1 * Math.cos((Date.now() - myTime) / period * 2 * Math.PI + cylinder1RotationYFi);
             objects.cone.position.y = basicConePosition.y + variousPos;
@@ -157,8 +158,8 @@
                 var cylinderGeometry = new THREE.CylinderGeometry(0.4, 0.4, 1, 32, 1, false);
                 var cylinderGeometry1 = new THREE.CylinderGeometry(cylinderGeometry.radiusTop * (3/5) * (3/4), cylinderGeometry.radiusTop * (3/5), cylinderGeometry.height * (2/3), 32, 1, false);
                 var crankshaftGeometry = new THREE.CylinderGeometry(cylinderGeometry1.radiusBottom, cylinderGeometry1.radiusBottom, 1.5, 32, 1, false);
-                var counterweightGeometry = new THREE.SphereGeometry(cylinderGeometry.radiusTop, 32, 32, 0, Math.PI, 0, Math.PI);
-                var dummyCrankshaftGeometry = new THREE.CubeGeometry(cylinderGeometry1.radiusBottom * 2, cylinderGeometry1.radiusBottom * 2, cylinderGeometry1.radiusBottom * 1.5);
+                var dummyCrankshaftGeometry = new THREE.CubeGeometry(cylinderGeometry1.radiusBottom * 2, cylinderGeometry1.radiusBottom * 1.5, cylinderGeometry1.radiusBottom * 1.5);
+                var counterweightGeometry = new THREE.SphereGeometry(dummyCrankshaftGeometry.height, 32, 32, 0, Math.PI, 0, Math.PI);
                 var material = new THREE.MeshPhongMaterial({color: 0xffeedd, side: THREE.DoubleSide, map: texture});
                 startDCpos = -cylinderGeometry1.height / 2 - dummyCrankshaftGeometry.height/2;
                 objects["cylinder"] = new THREE.Mesh(cylinderGeometry, material);
