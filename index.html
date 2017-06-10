@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="pl">
   <head>
     <title>Wymodelowanie uproszczonej wersji mechanizmu, np. ruchomego modelu silnika tłokowego</title>
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -18,15 +19,23 @@
             myTime = Date.now(),
             period = 5000,
             basicConePosition = null,
+            dummyCrankshaftTranslation = null,
+            crankshaftTranslation = null,
+            startDCpos = null,
             objects = {};
 
         function animate() {
             //dummyRotation(objects);
             var cylinder1RotationYFi = Math.PI / 2;
             objects.counterweight.rotation.y = - (Date.now() - myTime) / period * 2 * Math.PI;
-            objects.cone.rotation.z =  0.5 * Math.sin((Date.now() - myTime) / period * 2 * Math.PI);
+            objects.cone.rotation.z =  0.5 * Math.sin((Date.now() - myTime) / period * 2 * Math.PI + cylinder1RotationYFi);
             var variousPos = 0.1 * Math.cos((Date.now() - myTime) / period * 2 * Math.PI + cylinder1RotationYFi);
             objects.cone.position.y = basicConePosition.y + variousPos;
+            dummyCrankshaftTranslation.setX(Math.sin(objects.cone.rotation.z) * (objects.cone.geometry.height + objects.dummyCrankshaft.geometry.height)/2);
+            //dummyCrankshaftTranslation.setY(startDCpos + variousPos);
+            objects.dummyCrankshaft.position = objects.cone.position.clone().add(dummyCrankshaftTranslation);
+           // objects.counterweight.position = objects.cone.position.clone().add(new THREE.Vector3(0, startDCpos, 0));
+
         }
 
         function dummyRotation(solids) {
@@ -135,7 +144,7 @@
 
                 document.body.appendChild(renderer.domElement);
 
-                var textureFile = "images/foo.jpg";
+                var textureFile = "images/chess.png";
                 var texture = THREE.ImageUtils.loadTexture(textureFile);
 
                 var light = new THREE.PointLight();
@@ -147,9 +156,11 @@
                 var startZPosition = -5;
                 var cylinderGeometry = new THREE.CylinderGeometry(0.4, 0.4, 1, 32, 1, false);
                 var cylinderGeometry1 = new THREE.CylinderGeometry(cylinderGeometry.radiusTop * (3/5) * (3/4), cylinderGeometry.radiusTop * (3/5), cylinderGeometry.height * (2/3), 32, 1, false);
-                var pitmanGeometry = new THREE.CylinderGeometry(cylinderGeometry1.radiusBottom, cylinderGeometry1.radiusBottom, 1.5, 32, 1, false);
-                var counterweightGeometry = new THREE.SphereGeometry(0.34, 32, 32, 0, Math.PI, 0, Math.PI);
+                var crankshaftGeometry = new THREE.CylinderGeometry(cylinderGeometry1.radiusBottom, cylinderGeometry1.radiusBottom, 1.5, 32, 1, false);
+                var counterweightGeometry = new THREE.SphereGeometry(cylinderGeometry.radiusTop, 32, 32, 0, Math.PI, 0, Math.PI);
+                var dummyCrankshaftGeometry = new THREE.CubeGeometry(cylinderGeometry1.radiusBottom * 2, cylinderGeometry1.radiusBottom * 2, cylinderGeometry1.radiusBottom * 1.5);
                 var material = new THREE.MeshPhongMaterial({color: 0xffeedd, side: THREE.DoubleSide, map: texture});
+                startDCpos = -cylinderGeometry1.height / 2 - dummyCrankshaftGeometry.height/2;
                 objects["cylinder"] = new THREE.Mesh(cylinderGeometry, material);
                 objects["cone"] = new THREE.Mesh(cylinderGeometry1, material);
                 objects.cylinder.position = new THREE.Vector3(0, cylinderGeometry.height / 2, startZPosition);
@@ -157,21 +168,24 @@
                 objects.cone.position = basicConePosition.clone();
                 objects.cylinder.name = "cylinder";
                 objects.cone.name = "cone";
-                objects["pitman"] = new THREE.Mesh(pitmanGeometry, material);
-                objects.pitman.name = "pitman";
-                objects.pitman.position = basicConePosition.clone().add(
-                    new THREE.Vector3(0, - cylinderGeometry1.height / 2 - pitmanGeometry.radiusBottom / 2, -pitmanGeometry.height/2 + cylinderGeometry1.radiusBottom));
-                //objects.pitman.rotation = objects.cone.rotation;
+                //objects["crankshaft"] = new THREE.Mesh(crankshaftGeometry, material);
+                //objects.crankshaft.name = "crankshaft";
+                crankshaftTranslation = new THREE.Vector3(0, - cylinderGeometry1.height / 2 - crankshaftGeometry.radiusBottom / 2, -crankshaftGeometry.height/2 + cylinderGeometry1.radiusBottom);
+
+                //objects.crankshaft.position = basicConePosition.clone().add(crankshaftTranslation);
+                //objects.crankshaft.rotation = objects.cone.rotation;
 
                 camera.position = new THREE.Vector3(0, 0, -3); //basicConePosition.clone().add(new THREE.Vector3(0, -2, 0));
                 var newLight = new THREE.PointLight();
                 newLight.position = basicConePosition.clone().add(new THREE.Vector3(0, -10, 0));
                 scene.add(newLight);
 
-                objects.pitman.rotation.x = Math.PI / 2;
+                //objects.crankshaft.rotation.x = Math.PI / 2;
                 objects["counterweight"] = new THREE.Mesh(counterweightGeometry, material);
-                objects.counterweight.position.z = objects.cylinder.position.z;
-                objects.counterweight.position.y = -20.25;
+                objects["dummyCrankshaft"] = new THREE.Mesh(dummyCrankshaftGeometry, material);
+                dummyCrankshaftTranslation = new THREE.Vector3(0, -cylinderGeometry1.height / 2 - dummyCrankshaftGeometry.height/2, 0);
+                objects.dummyCrankshaft.rotation = objects.cone.rotation;
+                objects.counterweight.position = objects.cone.position.clone().add(new THREE.Vector3(0, startDCpos, 0));
                 objects.counterweight.name = "counterweight";
                 objects.counterweight.rotation.x = Math.PI / 2;
 
