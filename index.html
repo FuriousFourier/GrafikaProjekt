@@ -160,6 +160,7 @@
                 var crankshaftGeometry = new THREE.CylinderGeometry(cylinderGeometry1.radiusBottom, cylinderGeometry1.radiusBottom, 1.5, 32, 1, false);
                 var dummyCrankshaftGeometry = new THREE.CubeGeometry(cylinderGeometry1.radiusBottom * 2, cylinderGeometry1.radiusBottom * 1.5, cylinderGeometry1.radiusBottom * 1.5);
                 var counterweightGeometry = new THREE.SphereGeometry(dummyCrankshaftGeometry.height, 32, 32, 0, Math.PI, 0, Math.PI);
+                var canal11Geometry = new THREE.CylinderGeometry(cylinderGeometry.radiusTop * (0.3), cylinderGeometry.radiusTop * (0.3), cylinderGeometry.height * 0.6, 32, 1, true);
                 var material = new THREE.MeshPhongMaterial({color: 0xffeedd, side: THREE.DoubleSide, map: texture});
                 startDCpos = -cylinderGeometry1.height / 2 - dummyCrankshaftGeometry.height/2;
                 objects["cylinder"] = new THREE.Mesh(cylinderGeometry, material);
@@ -176,7 +177,7 @@
                 //objects.crankshaft.position = basicConePosition.clone().add(crankshaftTranslation);
                 //objects.crankshaft.rotation = objects.cone.rotation;
 
-                camera.position = new THREE.Vector3(0, 0, -3); //basicConePosition.clone().add(new THREE.Vector3(0, -2, 0));
+                camera.position = new THREE.Vector3(0, 0, 0);
                 var newLight = new THREE.PointLight();
                 newLight.position = basicConePosition.clone().add(new THREE.Vector3(0, -10, 0));
                 scene.add(newLight);
@@ -184,11 +185,38 @@
                 //objects.crankshaft.rotation.x = Math.PI / 2;
                 objects["counterweight"] = new THREE.Mesh(counterweightGeometry, material);
                 objects["dummyCrankshaft"] = new THREE.Mesh(dummyCrankshaftGeometry, material);
+                objects["canal11"] = new THREE.Mesh(canal11Geometry, material);
+                objects["canal21"] = new THREE.Mesh(canal11Geometry, material);
+                objects["canal12"] = new THREE.Mesh(canal11Geometry, material);
+                objects["canal22"] = new THREE.Mesh(canal11Geometry, material);
+
                 dummyCrankshaftTranslation = new THREE.Vector3(0, -cylinderGeometry1.height / 2 - dummyCrankshaftGeometry.height/2, 0);
                 objects.dummyCrankshaft.rotation = objects.cone.rotation;
                 objects.counterweight.position = objects.cone.position.clone().add(new THREE.Vector3(0, startDCpos, 0));
                 objects.counterweight.name = "counterweight";
                 objects.counterweight.rotation.x = Math.PI / 2;
+                objects.canal11.position = objects.cylinder.position.clone().add(new THREE.Vector3(
+                    objects.cylinder.geometry.radiusTop / 2,
+                    (objects.cylinder.geometry.height + canal11Geometry.height)/2,
+                    0
+                ));
+                objects.canal21.position = objects.cylinder.position.clone().add(new THREE.Vector3(
+                    -objects.cylinder.geometry.radiusTop / 2,
+                    (objects.cylinder.geometry.height + canal11Geometry.height)/2,
+                    0
+                ));
+                objects.canal12.position = objects.cylinder.position.clone().add(new THREE.Vector3(
+                    objects.cylinder.geometry.radiusTop / 2 + canal11Geometry.height/2 - canal11Geometry.radiusTop,
+                    objects.cylinder.geometry.height/2 + canal11Geometry.height - canal11Geometry.radiusTop,
+                    0
+                ));
+                objects.canal22.position = objects.cylinder.position.clone().add(new THREE.Vector3(
+                    -(objects.cylinder.geometry.radiusTop / 2 + canal11Geometry.height/2 - canal11Geometry.radiusTop),
+                    objects.cylinder.geometry.height/2 + canal11Geometry.height - canal11Geometry.radiusTop,
+                    0
+                ));
+                objects.canal12.rotation.z = Math.PI / 2;
+                objects.canal22.rotation.z = Math.PI / 2;
 
                 for (var key in objects) {
                     if(typeof objects[key] !== "undefined" && typeof objects[key].forEach !== "undefined") {
